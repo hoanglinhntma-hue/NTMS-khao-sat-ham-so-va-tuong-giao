@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTMA - Khảo sát hàm số & Tương giao (Full + Fullscreen)</title>
+    <title>Trợ lý khảo sát hàm số THPT</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -18,16 +18,44 @@
         #print-area { position: fixed; left: -9999px; top: 0; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .modal-animate { animation: fadeIn 0.2s ease-out forwards; }
-        /* Style cho thanh trượt */
+        
+        /* Cấu hình chung cho thanh trượt */
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #d97706; cursor: pointer; margin-top: -6px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #e5e7eb; border-radius: 2px; }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%; cursor: pointer; margin-top: -7px; box-shadow: 0 2px 4px rgba(0,0,0,0.4); transition: transform 0.1s; }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; border-radius: 2px; }
+        
+        /* Thanh trượt tham số m (Màu Tím) */
+        .slider-m::-webkit-slider-thumb { background: #9333ea; }
+        .slider-m::-webkit-slider-runnable-track { background: #d8b4fe; }
+
+        /* Thanh trượt tương giao (Màu Cam/Xanh/Lục) */
+        .slider-intersect-m::-webkit-slider-thumb { background: #d97706; }
+        .slider-intersect-m::-webkit-slider-runnable-track { background: #fcd34d; }
+        .slider-intersect-a::-webkit-slider-thumb { background: #2563eb; }
+        .slider-intersect-a::-webkit-slider-runnable-track { background: #bfdbfe; }
+        .slider-intersect-b::-webkit-slider-thumb { background: #16a34a; }
+        .slider-intersect-b::-webkit-slider-runnable-track { background: #bbf7d0; }
+        
+        /* Thanh trượt tiếp tuyến (Màu Ngọc Bích) */
+        .slider-tangent::-webkit-slider-thumb { background: #10b981; }
+        .slider-tangent::-webkit-slider-runnable-track { background: #6ee7b7; }
+
         /* Toggle switch */
         .toggle-checkbox { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
         .toggle-label { display: inline-block; width: 3rem; height: 1.5rem; background: #d1d5db; border-radius: 9999px; position: relative; transition: all 0.3s; cursor: pointer; }
-        .toggle-label:after { content: ''; position: absolute; top: 0.1875rem; left: 0.1875rem; width: 1.125rem; height: 1.125rem; background: white; border-radius: 50%; transition: all 0.3s; }
-        .toggle-checkbox:checked + .toggle-label { background: #3b82f6; }
+        .toggle-label:after { content: ''; position: absolute; top: 0.1875rem; left: 0.1875rem; width: 1.125rem; height: 1.125rem; background: white; border-radius: 50%; transition: all 0.3s; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        
+        /* Switch colors */
+        .toggle-blue:checked + .toggle-label { background: #3b82f6; }
+        .toggle-orange:checked + .toggle-label { background: #f59e0b; }
+        .toggle-purple:checked + .toggle-label { background: #9333ea; }
+        .toggle-emerald:checked + .toggle-label { background: #10b981; }
         .toggle-checkbox:checked + .toggle-label:after { transform: translateX(1.5rem); }
+        
+        .dashed-line-explain { border-top: 2px dashed #9ca3af; width: 20px; display: inline-block; margin-right: 5px; vertical-align: middle;}
+        .solid-line-explain { border-top: 2px solid #1e3a8a; width: 20px; display: inline-block; margin-right: 5px; vertical-align: middle;}
     </style>
 </head>
 <body>
@@ -62,11 +90,12 @@
         const Download = (p) => <IconBase {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></IconBase>;
         const HelpCircle = (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></IconBase>;
         const Split = (p) => <IconBase {...p}><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/></IconBase>;
-        // --- NEW ICONS FOR FULLSCREEN ---
         const Maximize = (p) => <IconBase {...p}><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></IconBase>;
         const Minimize = (p) => <IconBase {...p}><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></IconBase>;
-        // --- NEW ICON FOR HIDE/SHOW ---
         const EyeOpenClose = (p) => <IconBase {...p}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></IconBase>;
+        const SlidersHorizontal = (p) => <IconBase {...p}><line x1="21" y1="4" x2="14" y2="4"/><line x1="10" y1="4" x2="3" y2="4"/><line x1="21" y1="12" x2="12" y2="12"/><line x1="8" y1="12" x2="3" y2="12"/><line x1="21" y1="20" x2="16" y2="20"/><line x1="12" y1="20" x2="3" y2="20"/><line x1="14" y1="2" x2="14" y2="6"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="16" y1="18" x2="16" y2="22"/></IconBase>;
+        const ReflectVertical = (p) => <IconBase {...p}><path d="M9 3v18"/><path d="m14 8 5 4-5 4Z"/></IconBase>;
+        const TrendingUp = (p) => <IconBase {...p}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></IconBase>;
 
         // --- CẤU HÌNH ---
         const FONT_FAMILY = "'Times New Roman', Times, serif";
@@ -94,6 +123,30 @@
             return 0;
         }
 
+        // Tính đạo hàm bằng phương pháp xấp xỉ số học (Numerical Derivative)
+        const getDerivativeValue = (x, funcType, coeffs) => {
+            const h = 1e-5;
+            const y1 = getFunctionValue(x + h, funcType, coeffs);
+            const y2 = getFunctionValue(x - h, funcType, coeffs);
+            if (!isFinite(y1) || !isFinite(y2)) return NaN;
+            return (y1 - y2) / (2 * h);
+        }
+
+        // Tự động phân tích chuỗi nhập vào chứa m
+        const evaluateCoeff = (exprStr, m) => {
+            try {
+                let safeExpr = exprStr.toString().toLowerCase().trim();
+                if (safeExpr === '') return 0;
+                safeExpr = safeExpr.replace(/m\^2/g, '(m*m)');
+                safeExpr = safeExpr.replace(/(\d)m/g, '$1*m');
+                safeExpr = safeExpr.replace(/m/g, `(${m})`);
+                const result = new Function('"use strict";return (' + safeExpr + ')')();
+                return isFinite(result) ? result : 0;
+            } catch (e) {
+                return 0; 
+            }
+        };
+
         const MathFormula = ({ type, a, b, c, d, e, fontSize }) => {
           const Term = ({ coef, power, first=false }) => {
             if (Math.abs(coef) < 1e-9) return null;
@@ -117,55 +170,41 @@
           return null;
         };
 
-        // Hàm tìm nghiệm chính xác cho giao điểm
-        const findIntersectionRoot = (x1, x2, funcType, coeffs, intersection) => {
-          const tolerance = 1e-10;
-          const maxIterations = 50;
-          
+        const findIntersectionRoot = (x1, x2, funcType, coeffs, intersection, absMode) => {
+          const tolerance = 1e-10; const maxIterations = 50;
           const f = (x) => {
-            const funcVal = getFunctionValue(x, funcType, coeffs);
-            let lineVal;
-            if (intersection.type === 'horizontal') {
-              lineVal = parseFloat(intersection.m);
-            } else {
-              lineVal = intersection.a * x + intersection.b;
-            }
+            let funcVal = getFunctionValue(absMode === 'f_abs_x' ? Math.abs(x) : x, funcType, coeffs);
+            if (absMode === 'abs_fx') funcVal = Math.abs(funcVal);
+            let lineVal = intersection.type === 'horizontal' ? parseFloat(intersection.m) : intersection.a * x + intersection.b;
             return funcVal - lineVal;
           };
-          
-          const f1 = f(x1);
-          const f2 = f(x2);
-          
-          if (Math.abs(f1) < tolerance) return x1;
-          if (Math.abs(f2) < tolerance) return x2;
-          
+          const f1 = f(x1); const f2 = f(x2);
+          if (Math.abs(f1) < tolerance) return x1; if (Math.abs(f2) < tolerance) return x2;
           let a = x1, b = x2, fa = f1, fb = f2;
-          
           for (let i = 0; i < maxIterations; i++) {
-            const c = (a + b) / 2;
-            const fc = f(c);
-            
-            if (Math.abs(fc) < tolerance || (b - a) / 2 < tolerance) {
-              return c;
-            }
-            
-            if (fa * fc < 0) {
-              b = c;
-              fb = fc;
-            } else {
-              a = c;
-              fa = fc;
-            }
+            const c = (a + b) / 2; const fc = f(c);
+            if (Math.abs(fc) < tolerance || (b - a) / 2 < tolerance) return c;
+            if (fa * fc < 0) { b = c; fb = fc; } else { a = c; fa = fc; }
           }
-          
           return (x1 + x2) / 2;
         };
 
-        const SocraticTutor = ({ funcType, coeffs, analysis, onToggleResults }) => {
+        // ... SocraticTutor Component ...
+        const SocraticTutor = ({ funcType, coeffs, analysis, absMode }) => {
           const [step, setStep] = useState(0); const [subStep, setSubStep] = useState(0); const [hintLevel, setHintLevel] = useState(0); 
           const [userAnswer, setUserAnswer] = useState(''); const [feedback, setFeedback] = useState(null); const [showWhy, setShowWhy] = useState(false); const [isCorrect, setIsCorrect] = useState(false);
           useEffect(() => { setStep(0); setSubStep(0); setHintLevel(0); setUserAnswer(''); setFeedback(null); setIsCorrect(false); setShowWhy(false); }, [funcType, coeffs]);
+          
+          if (absMode !== 'none') return (
+              <div className="bg-purple-50 rounded-xl shadow border-2 border-purple-200 p-6 text-center min-h-[350px] flex flex-col items-center justify-center" style={{ fontFamily: FONT_FAMILY }}>
+                  <ReflectVertical className="w-16 h-16 text-purple-500 mb-4" />
+                  <h3 className="text-xl font-bold text-purple-800 mb-2">Chế độ Biến đổi Đồ thị</h3>
+                  <p className="text-purple-700">Trợ giảng AI tạm ngưng trong chế độ này để đảm bảo tính trực quan. Em hãy tự quan sát sự thay đổi của đồ thị nhé!</p>
+              </div>
+          );
+
           if (!analysis || !analysis.valid) return null;
+          
           const getStepContent = () => {
             let q = "", h1 = "", h2 = "", h3 = "", why = "";
             if (step === 0) {
@@ -221,7 +260,8 @@
           );
         };
 
-        const AnalysisResults = ({ analysis, funcType, coeffs }) => {
+        const AnalysisResults = ({ analysis, funcType, coeffs, absMode }) => {
+            if (absMode !== 'none') return <div className="text-purple-600 italic font-bold">Chế độ Biến đổi Đồ thị. Thông số phân tích gốc tạm ẩn để đảm bảo tính trực quan.</div>;
             if (!analysis || !analysis.valid) return <div className="text-gray-500 italic">Chưa có dữ liệu phân tích</div>;
             const { a, b, c, d, e } = coeffs;
             const Term = ({ coef, power, first=false }) => { if (Math.abs(coef) < 1e-9) return null; let sign = ''; let val = Math.abs(coef); if (!first) sign = coef > 0 ? ' + ' : ' − '; else if (coef < 0) sign = '−'; let valStr = val === 1 && power > 0 ? '' : formatNum(val).replace('-', ''); return <span>{sign}{valStr}{power > 0 && <i>x</i>}{power > 1 && <sup>{power}</sup>}</span>; };
@@ -241,7 +281,14 @@
             );
         };
 
-        const BBT = ({ analysis, funcType, coeffs, config }) => {
+        const BBT = ({ analysis, funcType, coeffs, config, absMode }) => {
+            if (absMode !== 'none') return (
+                 <div className="p-8 text-center flex flex-col items-center justify-center border border-purple-200 bg-purple-50 rounded-lg">
+                    <ReflectVertical className="w-10 h-10 text-purple-400 mb-2" />
+                    <span className="text-purple-700 font-bold">BBT tạm ẩn trong chế độ Trị tuyệt đối.</span>
+                    <span className="text-purple-600 text-sm mt-1">Hãy quan sát sự đối xứng trên đồ thị.</span>
+                 </div>
+            );
             if (!analysis || !analysis.valid) return <div className="p-5 text-blue-900 font-bold text-lg">Đang tính toán...</div>;
             if (['trig', 'trig_cos', 'trig_tan', 'trig_cot'].includes(funcType)) return <div className="p-5 text-center">Hàm tuần hoàn - Xem đồ thị</div>;
 
@@ -329,26 +376,27 @@
         // --- COMPONENT CHÍNH ---
         function App() {
           const [funcType, setFuncType] = useState('rational21');
-          const [coeffs, setCoeffs] = useState({ a: 1, b: 1, c: 4, d: 1, e: 1 });
+          
+          const [coeffInputs, setCoeffInputs] = useState({ a: '1', b: '-3', c: '3', d: '1', e: '-1' }); 
+          const [coeffs, setCoeffs] = useState({ a: 1, b: -3, c: 3, d: 1, e: -1 }); 
+          const [enableM, setEnableM] = useState(false);
+          const [mValue, setMValue] = useState(1);
+          
+          const [absMode, setAbsMode] = useState('none'); 
+
           const [analysis, setAnalysis] = useState(null);
           const [errorMsg, setErrorMsg] = useState('');
-          const [jsonCode, setJsonCode] = useState('');
           const [showAnalysis, setShowAnalysis] = useState(false);
           const [viewConfig, setViewConfig] = useState({ grid: true, asymptotes: true, extrema: true, intersections: true, projections: true });
           const [config, setConfig] = useState({ fontSize: 16, strokeWidth: 2, graphColor: DEFAULT_BLUE, zoom: 1.0, bbtLineWidth: 2 });
           
-          // --- NEW STATES: FULLSCREEN & INTERSECTION & HELP ---
           const [isGraphFullscreen, setIsGraphFullscreen] = useState(false);
-          const [intersection, setIntersection] = useState({ 
-            active: false, 
-            type: 'horizontal',
-            m: 0,
-            a: 1,
-            b: 0 
-          });
-          const [showHelp, setShowHelp] = useState(false);
+          const [intersection, setIntersection] = useState({ active: false, type: 'horizontal', m: 0, a: 1, b: 0 });
           
-          // --- NEW STATE: Ẩn/Hiện bảng xét dấu và đồ thị ---
+          // --- MỚI: Tiếp tuyến ---
+          const [tangent, setTangent] = useState({ active: false, x0: 1 });
+
+          const [showHelp, setShowHelp] = useState(false);
           const [showResultsPanel, setShowResultsPanel] = useState(true);
 
           const canvasRef = useRef(null);
@@ -363,9 +411,31 @@
             { id: 'logarithmic', label: '11. Hàm số logarit' },
           ];
 
+          useEffect(() => {
+              const newCoeffs = {};
+              let hasError = false;
+              for (const key in coeffInputs) {
+                  let val = evaluateCoeff(coeffInputs[key], enableM ? mValue : 0);
+                  newCoeffs[key] = val;
+              }
+              setCoeffs(newCoeffs);
+          }, [coeffInputs, mValue, enableM]);
+
           useEffect(() => { try { analyzeFunction(); setErrorMsg(''); setShowAnalysis(false); } catch (err) { console.error(err); setErrorMsg("Có lỗi khi tính toán."); } }, [coeffs, funcType]);
-          const handleInputChange = (e) => { setCoeffs({ ...coeffs, [e.target.name]: parseFloat(e.target.value) || 0 }); };
-          const selectFunctionType = (type) => { setFuncType(type); if (type==='cubic') setCoeffs({a:1,b:-3,c:0,d:2,e:0}); else if (type==='rational11') setCoeffs({a:2,b:-3,c:1,d:-1,e:0}); else if (type==='rational21') setCoeffs({a:1,b:-3,c:3,d:1,e:-1}); }
+          
+          const handleInputChange = (e) => { 
+              setCoeffInputs({ ...coeffInputs, [e.target.name]: e.target.value }); 
+          };
+          
+          const selectFunctionType = (type) => { 
+              setFuncType(type); 
+              setAbsMode('none'); 
+              if (type==='cubic') setCoeffInputs({a:'1',b:'-3',c:'0',d:'2',e:'0'}); 
+              else if (type==='rational11') setCoeffInputs({a:'2',b:'-3',c:'1',d:'-1',e:'0'}); 
+              else if (type==='rational21') setCoeffInputs({a:'1',b:'-3',c:'3',d:'1',e:'-1'}); 
+              else setCoeffInputs({a:'1',b:'1',c:'0',d:'0',e:'0'});
+          }
+          
           const toggleLayer = (layer) => { setViewConfig(prev => ({ ...prev, [layer]: !prev[layer] })); };
           
           const analyzeFunction = () => {
@@ -405,7 +475,7 @@
             setAnalysis(result);
           };
 
-          useEffect(() => { if (analysis && analysis.valid) draw(); }, [analysis, config, viewConfig, intersection, isGraphFullscreen]);
+          useEffect(() => { if (analysis && analysis.valid) draw(); }, [analysis, config, viewConfig, intersection, tangent, isGraphFullscreen, absMode]);
 
           const draw = () => {
             const canvas = canvasRef.current; if (!canvas) return; const ctx = canvas.getContext('2d'); 
@@ -413,8 +483,7 @@
             const w = isGraphFullscreen ? window.innerWidth : 650;
             const h = isGraphFullscreen ? window.innerHeight : 500;
             
-            canvas.width = w;
-            canvas.height = h;
+            canvas.width = w; canvas.height = h;
 
             ctx.fillStyle = "white"; ctx.fillRect(0, 0, w, h);
 
@@ -431,11 +500,9 @@
                 if (intersection.type === 'horizontal') {
                   importantY.push(parseFloat(intersection.m));
                 } else {
-                  // Thêm một vài giá trị y từ đường thẳng để tính toán khung nhìn
                   const y1 = intersection.a * xMin + intersection.b;
                   const y2 = intersection.a * xMax + intersection.b;
-                  importantY.push(y1);
-                  importantY.push(y2);
+                  importantY.push(y1); importantY.push(y2);
                 }
               }
 
@@ -444,16 +511,12 @@
             }
             
             if (isGraphFullscreen) {
-                const aspect = w / h;
-                const currentW = xMax - xMin;
-                const currentH = yMax - yMin;
+                const aspect = w / h; const currentW = xMax - xMin; const currentH = yMax - yMin;
                 if (aspect > currentW/currentH) {
-                    const newW = currentH * aspect;
-                    const delta = (newW - currentW) / 2;
+                    const newW = currentH * aspect; const delta = (newW - currentW) / 2;
                     xMin -= delta; xMax += delta;
                 } else {
-                    const newH = currentW / aspect;
-                    const delta = (newH - currentH) / 2;
+                    const newH = currentW / aspect; const delta = (newH - currentH) / 2;
                     yMin -= delta; yMax += delta;
                 }
             }
@@ -472,36 +535,99 @@
             };
             drawGridAndAxes();
 
-            // Vẽ đồ thị hàm số
-            ctx.strokeStyle = config.graphColor; 
-            ctx.lineWidth = config.strokeWidth; 
-            ctx.beginPath(); 
-
             const step = (xMax - xMin) / (isGraphFullscreen ? 3000 : 1500); 
-            let prevX = xMin; 
-            let isDiscontinuous = false;
+
+            // --- VẼ ĐỒ THỊ GỐC (NẾU CÓ BIẾN ĐỔI THÌ VẼ NÉT ĐỨT MỜ) ---
+            if (absMode !== 'none') {
+                ctx.strokeStyle = '#9ca3af'; // Màu xám
+                ctx.lineWidth = 1.5; 
+                ctx.setLineDash([5, 5]); // Nét đứt
+                ctx.beginPath(); 
+                let prevX = xMin; let isDiscontinuous = false;
+                for (let x = xMin; x <= xMax; x += step) { 
+                    const y = getFunctionValue(x, funcType, coeffs); 
+                    if (analysis.poles && analysis.poles.length > 0) { if (analysis.poles.some(p => prevX < p && x >= p)) isDiscontinuous = true; } 
+                    const sy = toSY(y); 
+                    if (!isFinite(y) || sy < -h * 2 || sy > h * 3) isDiscontinuous = true; 
+                    else { 
+                        const sx = toSX(x); 
+                        if (isDiscontinuous) { ctx.stroke(); ctx.beginPath(); ctx.moveTo(sx, sy); isDiscontinuous = false; } 
+                        else ctx.lineTo(sx, sy); 
+                    } 
+                    prevX = x; 
+                } 
+                ctx.stroke();
+                ctx.setLineDash([]); // Reset
+            }
+
+            // --- VẼ ĐỒ THỊ CHÍNH ---
+            ctx.strokeStyle = config.graphColor; 
+            ctx.lineWidth = config.strokeWidth + 0.5; // Đậm hơn chút
+            ctx.beginPath(); 
+            let prevX2 = xMin; let isDiscontinuous2 = false;
 
             for (let x = xMin; x <= xMax; x += step) { 
-                const y = getFunctionValue(x, funcType, coeffs); 
+                let evalX = absMode === 'f_abs_x' ? Math.abs(x) : x;
+                let y = getFunctionValue(evalX, funcType, coeffs); 
+                if (absMode === 'abs_fx') y = Math.abs(y);
+
                 if (analysis.poles && analysis.poles.length > 0) { 
-                    if (analysis.poles.some(p => prevX < p && x >= p)) isDiscontinuous = true; 
+                    if (analysis.poles.some(p => prevX2 < p && x >= p)) isDiscontinuous2 = true; 
+                    if (absMode === 'f_abs_x' && analysis.poles.some(p => p > 0 && prevX2 < -p && x >= -p)) isDiscontinuous2 = true;
                 } 
                 const sy = toSY(y); 
-                if (!isFinite(y) || sy < -h * 2 || sy > h * 3) isDiscontinuous = true; 
+                if (!isFinite(y) || sy < -h * 2 || sy > h * 3) isDiscontinuous2 = true; 
                 else { 
                     const sx = toSX(x); 
-                    if (isDiscontinuous) { 
-                        ctx.stroke(); 
-                        ctx.beginPath(); 
-                        ctx.moveTo(sx, sy); 
-                        isDiscontinuous = false; 
-                    } else ctx.lineTo(sx, sy); 
+                    if (isDiscontinuous2) { ctx.stroke(); ctx.beginPath(); ctx.moveTo(sx, sy); isDiscontinuous2 = false; } 
+                    else ctx.lineTo(sx, sy); 
                 } 
-                prevX = x; 
+                prevX2 = x; 
             } 
             ctx.stroke();
 
-            // Vẽ đường tương giao
+            // --- VẼ TIẾP TUYẾN ---
+            if (tangent.active && absMode === 'none') {
+                const x0 = parseFloat(tangent.x0);
+                const y0 = getFunctionValue(x0, funcType, coeffs);
+                const yPrime = getDerivativeValue(x0, funcType, coeffs);
+                
+                if (isFinite(y0) && isFinite(yPrime)) {
+                    const b = y0 - yPrime * x0;
+                    
+                    // Vẽ điểm tiếp xúc
+                    const sx0 = toSX(x0);
+                    const sy0 = toSY(y0);
+                    ctx.beginPath();
+                    ctx.arc(sx0, sy0, 6, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#10b981'; // Emerald-500
+                    ctx.fill();
+                    ctx.strokeStyle = '#047857';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+
+                    // Vẽ đường tiếp tuyến
+                    const y1 = yPrime * xMin + b;
+                    const y2 = yPrime * xMax + b;
+                    
+                    ctx.strokeStyle = '#10b981';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([8, 4]); // Đường đứt nét cho tiếp tuyến
+                    ctx.beginPath();
+                    ctx.moveTo(toSX(xMin), toSY(y1));
+                    ctx.lineTo(toSX(xMax), toSY(y2));
+                    ctx.stroke();
+                    ctx.setLineDash([]); // Reset
+                    
+                    // Vẽ phương trình tiếp tuyến
+                    ctx.fillStyle = '#065f46';
+                    ctx.font = `bold ${config.fontSize}pt ${MATH_FONT_FAMILY}`;
+                    const eqText = `Tiếp tuyến: y = ${formatNum(yPrime)}x ${b >= 0 ? '+' : '−'} ${formatNum(Math.abs(b))}`;
+                    ctx.fillText(eqText, 10, intersection.active ? 90 : 30);
+                }
+            }
+
+            // --- VẼ ĐƯỜNG TƯƠNG GIAO ---
             if (intersection.active) {
               ctx.strokeStyle = '#d97706'; 
               ctx.lineWidth = 2;
@@ -541,28 +667,24 @@
               ctx.fillStyle = '#dc2626';
               const searchStep = (xMax - xMin) / 2000;
               let points = [];
-              let prevVal = getFunctionValue(xMin, funcType, coeffs);
-              
+              let prevVal = getFunctionValue(absMode === 'f_abs_x' ? Math.abs(xMin) : xMin, funcType, coeffs);
+              if (absMode === 'abs_fx') prevVal = Math.abs(prevVal);
+
               for (let x = xMin; x <= xMax; x += searchStep) {
-                const val = getFunctionValue(x, funcType, coeffs);
+                let evalX = absMode === 'f_abs_x' ? Math.abs(x) : x;
+                let val = getFunctionValue(evalX, funcType, coeffs);
+                if (absMode === 'abs_fx') val = Math.abs(val);
                 
                 if (Math.abs(val - prevVal) > 5) {
                   prevVal = val;
                   continue;
                 }
                 
-                let lineVal;
-                if (intersection.type === 'horizontal') {
-                  lineVal = parseFloat(intersection.m);
-                } else {
-                  lineVal = intersection.a * x + intersection.b;
-                }
+                let lineVal = intersection.type === 'horizontal' ? parseFloat(intersection.m) : intersection.a * x + intersection.b;
                 
                 if ((val - lineVal) * (prevVal - lineVal) <= 0) {
-                  const xRoot = findIntersectionRoot(x - searchStep, x, funcType, coeffs, intersection);
-                  const yRoot = intersection.type === 'horizontal' ? 
-                                parseFloat(intersection.m) : 
-                                intersection.a * xRoot + intersection.b;
+                  const xRoot = findIntersectionRoot(x - searchStep, x, funcType, coeffs, intersection, absMode);
+                  const yRoot = intersection.type === 'horizontal' ? parseFloat(intersection.m) : intersection.a * xRoot + intersection.b;
                   
                   const isDuplicate = points.some(p => Math.abs(p.x - xRoot) < 0.01);
                   if (!isDuplicate) {
@@ -598,7 +720,8 @@
               ctx.fillText(`Số giao điểm: ${points.length}`, 20, 60);
             }
 
-            if (analysis && analysis.valid) {
+            // --- Các điểm đặc biệt & Tiệm cận (Chỉ hiển thị chuẩn khi KHÔNG ở chế độ Trị tuyệt đối) ---
+            if (analysis && analysis.valid && absMode === 'none') {
                if (viewConfig.asymptotes) { 
                    ctx.setLineDash([8, 8]); 
                    ctx.strokeStyle = DEFAULT_BLUE; 
@@ -606,16 +729,12 @@
                    if (analysis.asymptotes) analysis.asymptotes.forEach(asym => { 
                        ctx.beginPath(); 
                        if (asym.type === 'vertical') { 
-                           ctx.moveTo(toSX(asym.val), 0); 
-                           ctx.lineTo(toSX(asym.val), h); 
+                           ctx.moveTo(toSX(asym.val), 0); ctx.lineTo(toSX(asym.val), h); 
                        } else if (asym.type === 'horizontal') { 
-                           ctx.moveTo(0, toSY(asym.val)); 
-                           ctx.lineTo(w, toSY(asym.val)); 
+                           ctx.moveTo(0, toSY(asym.val)); ctx.lineTo(w, toSY(asym.val)); 
                        } else if (asym.type === 'slant') { 
-                           const y1 = asym.m * xMin + asym.k; 
-                           const y2 = asym.m * xMax + asym.k; 
-                           ctx.moveTo(toSX(xMin), toSY(y1)); 
-                           ctx.lineTo(toSX(xMax), toSY(y2)); 
+                           const y1 = asym.m * xMin + asym.k; const y2 = asym.m * xMax + asym.k; 
+                           ctx.moveTo(toSX(xMin), toSY(y1)); ctx.lineTo(toSX(xMax), toSY(y2)); 
                        } 
                        ctx.stroke(); 
                    }); 
@@ -623,194 +742,72 @@
                }
                
                const drawTickX = (val, text, dx = 0, dy = 0) => { 
-                   const sx = toSX(val); 
-                   if (sx < 0 || sx > w) return; 
-                   ctx.beginPath(); 
-                   ctx.moveTo(sx, yOrigin - 4); 
-                   ctx.lineTo(sx, yOrigin + 4); 
-                   ctx.stroke(); 
-                   ctx.save(); 
-                   ctx.font = `${config.fontSize}pt ${MATH_FONT_FAMILY}`; 
-                   ctx.fillStyle = DEFAULT_BLUE; 
-                   ctx.fillText(text, sx - 5 + dx, yOrigin + 20 + dy); 
-                   ctx.restore(); 
+                   const sx = toSX(val); if (sx < 0 || sx > w) return; 
+                   ctx.beginPath(); ctx.moveTo(sx, yOrigin - 4); ctx.lineTo(sx, yOrigin + 4); ctx.stroke(); 
+                   ctx.save(); ctx.font = `${config.fontSize}pt ${MATH_FONT_FAMILY}`; ctx.fillStyle = DEFAULT_BLUE; 
+                   ctx.fillText(text, sx - 5 + dx, yOrigin + 20 + dy); ctx.restore(); 
                };
                
                const drawTickY = (val, text, dx = 0, dy = 0) => { 
-                   const sy = toSY(val); 
-                   if (sy < 0 || sy > h) return; 
-                   ctx.beginPath(); 
-                   ctx.moveTo(xOrigin - 4, sy); 
-                   ctx.lineTo(xOrigin + 4, sy); 
-                   ctx.stroke(); 
-                   ctx.save(); 
-                   ctx.font = `${config.fontSize}pt ${MATH_FONT_FAMILY}`; 
-                   ctx.fillStyle = DEFAULT_BLUE; 
-                   ctx.fillText(text, xOrigin + 8 + dx, sy + 5 + dy); 
-                   ctx.restore(); 
+                   const sy = toSY(val); if (sy < 0 || sy > h) return; 
+                   ctx.beginPath(); ctx.moveTo(xOrigin - 4, sy); ctx.lineTo(xOrigin + 4, sy); ctx.stroke(); 
+                   ctx.save(); ctx.font = `${config.fontSize}pt ${MATH_FONT_FAMILY}`; ctx.fillStyle = DEFAULT_BLUE; 
+                   ctx.fillText(text, xOrigin + 8 + dx, sy + 5 + dy); ctx.restore(); 
                };
                
-               ctx.strokeStyle = DEFAULT_BLUE; 
-               ctx.fillStyle = DEFAULT_BLUE; 
-               ctx.lineWidth = 1.5;
+               ctx.strokeStyle = DEFAULT_BLUE; ctx.fillStyle = DEFAULT_BLUE; ctx.lineWidth = 1.5;
+               if (viewConfig.intersections && analysis.intersections) { analysis.intersections.forEach(p => { if (p.axis === 'x') drawTickX(p.val, formatNum(p.val)); if (p.axis === 'y') drawTickY(p.val, formatNum(p.val)); }); }
                
-               if (viewConfig.intersections && analysis.intersections) { 
-                   analysis.intersections.forEach(p => { 
-                       if (p.axis === 'x') drawTickX(p.val, formatNum(p.val)); 
-                       if (p.axis === 'y') drawTickY(p.val, formatNum(p.val)); 
-                   }); 
-               }
-               
-               // --- VẼ ĐƯỜNG GIÓNG VÀ HIỂN THỊ TOẠ ĐỘ CHO CỰC TRỊ (ĐÃ SỬA) ---
                if (analysis.specialPoints) {
-                   // Sắp xếp điểm theo thứ tự từ trái sang phải để xử lý chồng chéo
                    const sortedPoints = [...analysis.specialPoints].sort((a, b) => a.x - b.x);
-                   
-                   // Mảng lưu vùng đã được sử dụng để tránh chồng chéo
                    const occupiedZones = [];
-                   
                    sortedPoints.forEach((p, idx) => { 
-                       const sx = toSX(p.x); 
-                       const sy = toSY(p.y); 
+                       const sx = toSX(p.x); const sy = toSY(p.y); 
                        if (sx >= -50 && sx <= w + 50 && sy >= -50 && sy <= h + 50) { 
                            let shouldDraw = false; 
-                           if (p.type === 'extrema' || p.type === 'center' || p.type === 'vertex' || p.type === 'inflection') { 
-                               if (viewConfig.extrema) shouldDraw = true; 
-                           } 
+                           if (p.type === 'extrema' || p.type === 'center' || p.type === 'vertex' || p.type === 'inflection') { if (viewConfig.extrema) shouldDraw = true; } 
                            if (shouldDraw) { 
-                               // Vẽ đường gióng nếu bật chế độ projections
                                if (viewConfig.projections) { 
                                    if (!['trig', 'trig_cos', 'trig_tan', 'trig_cot'].includes(funcType)) { 
-                                       ctx.save(); 
-                                       ctx.setLineDash([4, 4]); 
-                                       ctx.lineWidth = 1.5; 
-                                       ctx.strokeStyle = '#dc2626';
-                                       ctx.beginPath(); 
-                                       
-                                       // Đường gióng xuống trục Ox
-                                       if (Math.abs(p.y) > 0.1) { 
-                                           ctx.moveTo(sx, sy); 
-                                           ctx.lineTo(sx, yOrigin); 
-                                       } 
-                                       
-                                       // Đường gióng sang trục Oy
-                                       if (Math.abs(p.x) > 0.1) { 
-                                           ctx.moveTo(sx, sy); 
-                                           ctx.lineTo(xOrigin, sy); 
-                                       } 
-                                       ctx.stroke(); 
-                                       ctx.restore(); 
+                                       ctx.save(); ctx.setLineDash([4, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = '#dc2626'; ctx.beginPath(); 
+                                       if (Math.abs(p.y) > 0.1) { ctx.moveTo(sx, sy); ctx.lineTo(sx, yOrigin); } 
+                                       if (Math.abs(p.x) > 0.1) { ctx.moveTo(sx, sy); ctx.lineTo(xOrigin, sy); } 
+                                       ctx.stroke(); ctx.restore(); 
                                    } 
                                } 
-                               
-                               // Vẽ điểm cực trị
-                               ctx.beginPath(); 
-                               ctx.arc(sx, sy, 4, 0, 2 * Math.PI); 
-                               ctx.fillStyle = '#dc2626';
-                               ctx.fill();
-                               
-                               // XỬ LÝ HIỂN THỊ TỌA ĐỘ KHÔNG CHỒNG CHÉO
-                               ctx.save(); 
-                               ctx.font = `bold ${Math.max(10, config.fontSize - 2)}pt ${MATH_FONT_FAMILY}`; 
-                               ctx.fillStyle = '#000000';
-                               
-                               const coordText = `(${formatNum(p.x)}; ${formatNum(p.y)})`;
-                               const labelText = p.label ? p.label : "";
-                               
-                               const coordWidth = ctx.measureText(coordText).width;
-                               const labelWidth = labelText ? ctx.measureText(labelText).width : 0;
-                               const textHeight = config.fontSize;
-                               
-                               // Xác định vị trí hiển thị ưu tiên
+                               ctx.beginPath(); ctx.arc(sx, sy, 4, 0, 2 * Math.PI); ctx.fillStyle = '#dc2626'; ctx.fill();
+                               ctx.save(); ctx.font = `bold ${Math.max(10, config.fontSize - 2)}pt ${MATH_FONT_FAMILY}`; ctx.fillStyle = '#000000';
+                               const coordText = `(${formatNum(p.x)}; ${formatNum(p.y)})`; const labelText = p.label ? p.label : "";
+                               const coordWidth = ctx.measureText(coordText).width; const labelWidth = labelText ? ctx.measureText(labelText).width : 0; const textHeight = config.fontSize;
                                let positions = [];
+                               if (sy - textHeight * 2 > 20) positions.push({ x: sx + 10, y: sy - 10, type: 'above-right' });
+                               if (sy + textHeight * 2 < h - 20) positions.push({ x: sx + 10, y: sy + 20, type: 'below-right' });
+                               if (sy - textHeight * 2 > 20 && sx - coordWidth - 10 > 10) positions.push({ x: sx - coordWidth - 10, y: sy - 10, type: 'above-left' });
+                               if (sy + textHeight * 2 < h - 20 && sx - coordWidth - 10 > 10) positions.push({ x: sx - coordWidth - 10, y: sy + 20, type: 'below-left' });
+                               if (sx + coordWidth + 30 < w - 10) positions.push({ x: sx + 30, y: sy, type: 'far-right' });
                                
-                               // Ưu tiên 1: Phía trên bên phải
-                               if (sy - textHeight * 2 > 20) {
-                                   positions.push({ x: sx + 10, y: sy - 10, type: 'above-right' });
-                               }
-                               
-                               // Ưu tiên 2: Phía dưới bên phải
-                               if (sy + textHeight * 2 < h - 20) {
-                                   positions.push({ x: sx + 10, y: sy + 20, type: 'below-right' });
-                               }
-                               
-                               // Ưu tiên 3: Phía trên bên trái
-                               if (sy - textHeight * 2 > 20 && sx - coordWidth - 10 > 10) {
-                                   positions.push({ x: sx - coordWidth - 10, y: sy - 10, type: 'above-left' });
-                               }
-                               
-                               // Ưu tiên 4: Phía dưới bên trái
-                               if (sy + textHeight * 2 < h - 20 && sx - coordWidth - 10 > 10) {
-                                   positions.push({ x: sx - coordWidth - 10, y: sy + 20, type: 'below-left' });
-                               }
-                               
-                               // Ưu tiên 5: Bên phải, cách xa hơn
-                               if (sx + coordWidth + 30 < w - 10) {
-                                   positions.push({ x: sx + 30, y: sy, type: 'far-right' });
-                               }
-                               
-                               // Kiểm tra vị trí nào không bị chồng lên vùng đã chiếm
                                let chosenPosition = null;
                                for (const pos of positions) {
                                    let overlap = false;
-                                   
                                    for (const zone of occupiedZones) {
-                                       const horizontalOverlap = 
-                                           pos.x < zone.x + zone.width + 5 && 
-                                           pos.x + coordWidth + 5 > zone.x;
-                                       const verticalOverlap = 
-                                           pos.y < zone.y + zone.height + 5 && 
-                                           pos.y + textHeight + 5 > zone.y;
-                                       
-                                       if (horizontalOverlap && verticalOverlap) {
-                                           overlap = true;
-                                           break;
-                                       }
+                                       if (pos.x < zone.x + zone.width + 5 && pos.x + coordWidth + 5 > zone.x && pos.y < zone.y + zone.height + 5 && pos.y + textHeight + 5 > zone.y) { overlap = true; break; }
                                    }
-                                   
-                                   if (!overlap) {
-                                       chosenPosition = pos;
-                                       break;
-                                   }
+                                   if (!overlap) { chosenPosition = pos; break; }
                                }
+                               if (!chosenPosition && positions.length > 0) chosenPosition = positions[0];
                                
-                               // Nếu không tìm được vị trí không chồng, dùng vị trí đầu tiên
-                               if (!chosenPosition && positions.length > 0) {
-                                   chosenPosition = positions[0];
-                               }
-                               
-                               // Vẽ tọa độ nếu tìm được vị trí
                                if (chosenPosition) {
                                    ctx.fillText(coordText, chosenPosition.x, chosenPosition.y);
-                                   
-                                   // Lưu vùng đã chiếm
-                                   occupiedZones.push({
-                                       x: chosenPosition.x,
-                                       y: chosenPosition.y - textHeight,
-                                       width: coordWidth,
-                                       height: textHeight * 2
-                                   });
-                                   
-                                   // Vẽ nhãn CĐ/CT nếu có
+                                   occupiedZones.push({ x: chosenPosition.x, y: chosenPosition.y - textHeight, width: coordWidth, height: textHeight * 2 });
                                    if (labelText && chosenPosition.type.includes('above')) {
-                                       ctx.fillStyle = '#1e3a8a';
-                                       ctx.fillText(labelText, chosenPosition.x, chosenPosition.y - 20);
-                                       
-                                       occupiedZones.push({
-                                           x: chosenPosition.x,
-                                           y: chosenPosition.y - textHeight - 20,
-                                           width: labelWidth,
-                                           height: textHeight
-                                       });
+                                       ctx.fillStyle = '#1e3a8a'; ctx.fillText(labelText, chosenPosition.x, chosenPosition.y - 20);
+                                       occupiedZones.push({ x: chosenPosition.x, y: chosenPosition.y - textHeight - 20, width: labelWidth, height: textHeight });
                                    } else if (labelText) {
-                                       ctx.fillStyle = '#1e3a8a';
-                                       ctx.fillText(labelText, chosenPosition.x, chosenPosition.y + 20);
+                                       ctx.fillStyle = '#1e3a8a'; ctx.fillText(labelText, chosenPosition.x, chosenPosition.y + 20);
                                    }
                                } else if (sx + coordWidth + 10 < w && sy - 10 > 20) {
-                                   // Fallback: vị trí mặc định
                                    ctx.fillText(coordText, sx + 10, sy - 10);
                                }
-                               
                                ctx.restore(); 
                            } 
                        } 
@@ -825,7 +822,7 @@
               document.getElementById('report-graph-img').src = canvasImg;
               html2canvas(reportArea, { scale: 2 }).then(canvas => {
                   const link = document.createElement('a');
-                  link.download = `NTMA_PhieuBaiTap_${funcType}.png`;
+                  link.download = `TroLyKhaoSatHamSo_${funcType}.png`;
                   link.href = canvas.toDataURL();
                   link.click();
               });
@@ -840,28 +837,34 @@
                         <div className="flex items-center"><HelpCircle className="w-6 h-6 mr-2"/><h3 className="font-bold text-xl">Hướng dẫn sử dụng</h3></div>
                         <button onClick={() => setShowHelp(false)} className="hover:bg-blue-800 rounded-full p-1"><XCircle className="w-6 h-6"/></button>
                     </div>
-                    <div className="p-6 space-y-6">
-                        <div className="flex items-start"><div className="bg-blue-100 text-blue-800 font-bold rounded-full w-10 h-10 flex items-center justify-center mr-4 flex-shrink-0 text-lg shadow-sm">1</div><div><h4 className="font-bold text-blue-900 text-lg mb-1">Chọn Hàm & Nhập Số</h4><p className="text-gray-600 leading-relaxed">Chọn loại hàm số ở cột trái và nhập hệ số a, b, c... Đồ thị sẽ tự động vẽ.</p></div></div>
-                        <div className="flex items-start"><div className="bg-blue-100 text-blue-800 font-bold rounded-full w-10 h-10 flex items-center justify-center mr-4 flex-shrink-0 text-lg shadow-sm">2</div><div><h4 className="font-bold text-blue-900 text-lg mb-1">Tương Giao Đồ Thị (Mới)</h4><p className="text-gray-600 leading-relaxed">Bật công tắc <span className="font-bold">"Bài toán Tương giao"</span> bên trái. Kéo thanh trượt m để biện luận số nghiệm.</p></div></div>
-                        <div className="flex items-start"><div className="bg-blue-100 text-blue-800 font-bold rounded-full w-10 h-10 flex items-center justify-center mr-4 flex-shrink-0 text-lg shadow-sm">3</div><div><h4 className="font-bold text-blue-900 text-lg mb-1">Xuất Báo Cáo</h4><p className="text-gray-600 leading-relaxed">Bấm nút <span className="font-bold text-amber-600">Tải Phiếu</span> ở góc trên để lưu bài làm dạng ảnh đẹp mắt.</p></div></div>
-                        <div className="mt-6 pt-6 border-t border-gray-100 text-center"><button onClick={() => setShowHelp(false)} className="px-8 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all">Đã hiểu, bắt đầu ngay!</button></div>
+                    <div className="p-6 space-y-5">
+                        <div className="flex items-start"><div className="bg-blue-100 text-blue-800 font-bold rounded-full w-10 h-10 flex items-center justify-center mr-4 flex-shrink-0 text-lg shadow-sm">1</div><div><h4 className="font-bold text-blue-900 text-lg mb-1">Chế độ Tham số m</h4><p className="text-gray-600 leading-relaxed text-sm">Bật công tắc "Biện luận tham số m". Tại các ô hệ số a,b,c..., em có thể nhập chữ "m" (VD: 2m, -m, m+1). Kéo thanh trượt để xem đồ thị chuyển động!</p></div></div>
+                        <div className="flex items-start"><div className="bg-blue-100 text-blue-800 font-bold rounded-full w-10 h-10 flex items-center justify-center mr-4 flex-shrink-0 text-lg shadow-sm">2</div><div><h4 className="font-bold text-blue-900 text-lg mb-1">Phương trình Tiếp tuyến (Mới)</h4><p className="text-gray-600 leading-relaxed text-sm">Kích hoạt tính năng Tiếp tuyến ở Mục 9. Kéo điểm <i>x<sub>0</sub></i> để xem tiếp điểm và đường tiếp tuyến thay đổi theo đồ thị, kèm phương trình tương ứng.</p></div></div>
+                        <div className="flex items-start"><div className="bg-blue-100 text-blue-800 font-bold rounded-full w-10 h-10 flex items-center justify-center mr-4 flex-shrink-0 text-lg shadow-sm">3</div><div><h4 className="font-bold text-blue-900 text-lg mb-1">Đồ thị Trị tuyệt đối</h4><p className="text-gray-600 leading-relaxed text-sm">Sử dụng công cụ ở mục số 8 để tạo đồ thị <i>y=|f(x)|</i> hoặc <i>y=f(|x|)</i>. Đồ thị gốc sẽ biến thành nét đứt để dễ so sánh.</p></div></div>
+                        <div className="mt-4 pt-4 border-t border-gray-100 text-center"><button onClick={() => setShowHelp(false)} className="px-8 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all">Đã hiểu, bắt đầu ngay!</button></div>
                     </div>
                     </div>
                 </div>
               )}
+              
+              {/* PHIẾU BÀI TẬP (ẨN ĐỂ IN) */}
               <div id="print-area" className="bg-white p-10 w-[800px] text-blue-900 border border-gray-300">
-                  <div className="text-center border-b-2 border-blue-900 pb-4 mb-6"><h1 className="text-3xl font-bold uppercase">PHIẾU BÀI TẬP KHẢO SÁT HÀM SỐ</h1><p className="text-gray-600 italic mt-1">Hệ thống hỗ trợ dạy và học toán THPT - NTMA</p></div>
-                  <div className="mb-6"><h2 className="text-xl font-bold mb-2 uppercase border-l-4 border-blue-600 pl-2">I. Đề bài</h2><div className="bg-gray-50 p-4 rounded text-xl text-center border border-gray-200"><MathFormula type={funcType} {...coeffs} fontSize={24} /></div></div>
-                  <div className="mb-6"><h2 className="text-xl font-bold mb-2 uppercase border-l-4 border-blue-600 pl-2">II. Lời giải chi tiết</h2><div className="bg-white p-2 border border-gray-200 rounded"><AnalysisResults analysis={analysis} funcType={funcType} coeffs={coeffs} /></div></div>
-                  <div className="mb-6"><h2 className="text-xl font-bold mb-2 uppercase border-l-4 border-blue-600 pl-2">III. Bảng xét dấu</h2><div className="border border-gray-300 p-2"><BBT analysis={analysis} funcType={funcType} coeffs={coeffs} config={{...config, fontSize: 14}} /></div></div>
-                  <div className="mb-4"><h2 className="text-xl font-bold mb-2 uppercase border-l-4 border-blue-600 pl-2">IV. Đồ thị hàm số</h2><div className="flex justify-center border border-gray-200 p-2 rounded"><img id="report-graph-img" alt="Graph" className="max-w-full h-auto" /></div></div>
-                  <div className="text-center text-sm text-gray-400 mt-8 pt-4 border-t">Được tạo tự động bởi phần mềm NTMA</div>
+                  <div className="text-center border-b-2 border-blue-900 pb-4 mb-6"><h1 className="text-3xl font-bold uppercase">PHIẾU BÀI TẬP KHẢO SÁT HÀM SỐ</h1><p className="text-gray-600 italic mt-1">Trợ lý khảo sát hàm số THPT</p></div>
+                  <div className="mb-6"><h2 className="text-xl font-bold mb-2 uppercase border-l-4 border-blue-600 pl-2">I. Đề bài</h2><div className="bg-gray-50 p-4 rounded text-xl text-center border border-gray-200">
+                      {absMode === 'abs_fx' ? <span><i>y</i> = |</span> : (absMode === 'f_abs_x' ? <span>Hàm số <i>y</i> = <i>f</i>(|<i>x</i>|) với <i>f(x)</i> = </span> : "")}
+                      <MathFormula type={funcType} {...coeffs} fontSize={24} />
+                      {absMode === 'abs_fx' ? <span>|</span> : ""}
+                  </div></div>
+                  {absMode === 'none' && <div className="mb-6"><h2 className="text-xl font-bold mb-2 uppercase border-l-4 border-blue-600 pl-2">II. Lời giải chi tiết</h2><div className="bg-white p-2 border border-gray-200 rounded"><AnalysisResults analysis={analysis} funcType={funcType} coeffs={coeffs} absMode={absMode} /></div></div>}
+                  {absMode === 'none' && <div className="mb-6"><h2 className="text-xl font-bold mb-2 uppercase border-l-4 border-blue-600 pl-2">III. Bảng xét dấu</h2><div className="border border-gray-300 p-2"><BBT analysis={analysis} funcType={funcType} coeffs={coeffs} config={{...config, fontSize: 14}} absMode={absMode} /></div></div>}
+                  <div className="mb-4"><h2 className="text-xl font-bold mb-2 uppercase border-l-4 border-blue-600 pl-2">{absMode==='none' ? 'IV' : 'II'}. Đồ thị hàm số</h2><div className="flex justify-center border border-gray-200 p-2 rounded"><img id="report-graph-img" alt="Graph" className="max-w-full h-auto" /></div></div>
+                  <div className="text-center text-sm text-gray-400 mt-8 pt-4 border-t">Được tạo tự động bởi Trợ lý khảo sát hàm số THPT<br/>Bản quyền © Edulab Ai 2026 - Số điện thoại: 0989550411</div>
               </div>
               
               <div className="w-[60%] flex-shrink-0 border-r border-gray-300 bg-white flex flex-col z-10 shadow-lg overflow-hidden">
                 <div className="bg-blue-900 p-5 relative flex items-center shadow-md h-20">
-                   <div className="absolute left-5 font-bold text-2xl text-white tracking-wide z-10" style={{ fontFamily: FONT_FAMILY }}>NTMA</div>
-                   <div className="w-full text-center"><h1 className="text-3xl font-bold uppercase text-amber-400 tracking-wider" style={{ fontFamily: FONT_FAMILY }}>CÁC HÀM SỐ HAY GẶP THPT</h1></div>
+                   <div className="absolute left-5 font-bold text-2xl text-white tracking-wide z-10" style={{ fontFamily: FONT_FAMILY }}>Toán THPT</div>
+                   <div className="w-full text-center"><h1 className="text-3xl font-bold uppercase text-amber-400 tracking-wider" style={{ fontFamily: FONT_FAMILY }}>TRỢ LÝ KHẢO SÁT HÀM SỐ</h1></div>
                    <div className="absolute right-5 z-10 flex gap-2">
                        <button onClick={() => setShowHelp(true)} className="bg-white/20 hover:bg-white/30 text-white p-1.5 rounded-full transition-colors flex-shrink-0" title="Hướng dẫn sử dụng"><QuestionIcon className="w-6 h-6"/></button>
                        <button onClick={handleExportReport} className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded shadow flex items-center text-sm font-bold" title="Tải phiếu bài tập"><Download className="w-4 h-4 mr-1"/> Tải Phiếu</button>
@@ -870,129 +873,123 @@
                 </div>
                 <div className="flex-1 overflow-y-auto p-5 bg-[#F5F5F5]">
                   <div className="grid grid-cols-2 gap-5">
+                    
+                    {/* --- CỘT TRÁI --- */}
                     <div className="bg-white p-4 rounded-xl shadow border border-gray-300 col-span-1">
                      <label className="block text-lg font-bold mb-3 text-blue-900 flex items-center" style={{ fontFamily: FONT_FAMILY }}><List className="w-5 h-5 mr-2" /> 1. Chọn Hàm Số</label>
-                      <div className="space-y-2 h-48 overflow-y-auto pr-1">
+                      <div className="space-y-2 h-[260px] overflow-y-auto pr-1">
                       {functionOptions.map(opt => ( <button key={opt.id} onClick={() => selectFunctionType(opt.id)} className={`w-full text-left px-4 py-3 rounded border font-bold text-base flex items-center ${funcType === opt.id ? 'bg-blue-50 border-blue-900 text-blue-900' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'}`} style={{ fontFamily: FONT_FAMILY }}>{funcType === opt.id ? <CheckCircle2 className="w-5 h-5 mr-2 text-blue-900" /> : <div className="w-5 h-5 mr-2" />}{opt.label}</button>))}
                     </div>
                    </div>
-                    <div className="bg-white p-4 rounded-xl shadow border border-gray-300 col-span-1">
-                     <label className="block text-lg font-bold mb-3 text-blue-900 flex items-center" style={{ fontFamily: FONT_FAMILY }}><Calculator className="w-5 h-5 mr-2" /> 2. Nhập hệ số vào đây</label>
-                      <div className="mb-3 text-center bg-gray-50 py-3 rounded border border-gray-200"><MathFormula type={funcType} {...coeffs} fontSize={16} /></div>
-                      <div className="grid grid-cols-2 gap-3 text-base">
-                        <div className="flex items-center"><span className="w-8 font-bold text-blue-900 text-lg">a:</span><input type="number" name="a" value={coeffs.a} onChange={handleInputChange} className="w-16 border border-gray-300 rounded p-1 text-center font-bold text-blue-900 ml-1 text-lg"/></div>
-                        <div className="flex items-center"><span className="w-8 font-bold text-blue-900 text-lg">b:</span><input type="number" name="b" value={coeffs.b} onChange={handleInputChange} className="w-16 border border-gray-300 rounded p-1 text-center font-bold text-blue-900 ml-1 text-lg"/></div>
-                         <div className="flex items-center"><span className="w-8 font-bold text-blue-900 text-lg">c:</span><input type="number" name="c" value={coeffs.c} onChange={handleInputChange} className="w-16 border border-gray-300 rounded p-1 text-center font-bold text-blue-900 ml-1 text-lg"/></div>
-                        {(['cubic', 'rational11', 'rational21', 'trig', 'trig_cos', 'trig_tan', 'trig_cot', 'logarithmic', 'exponential'].includes(funcType)) && <div className="flex items-center"><span className="w-8 font-bold text-blue-900 text-lg">d:</span><input type="number" name="d" value={coeffs.d} onChange={handleInputChange} className="w-16 border border-gray-300 rounded p-1 text-center font-bold text-blue-900 ml-1 text-lg"/></div>}
-                        {(['rational21'].includes(funcType)) && <div className="flex items-center"><span className="w-8 font-bold text-blue-900 text-lg">e:</span><input type="number" name="e" value={coeffs.e} onChange={handleInputChange} className="w-16 border border-gray-300 rounded p-1 text-center font-bold text-blue-900 ml-1 text-lg"/></div>}
+
+                    {/* --- CỘT PHẢI (HỆ SỐ + THAM SỐ) --- */}
+                    <div className="bg-white p-4 rounded-xl shadow border-2 border-purple-200 col-span-1 flex flex-col">
+                     <label className="block text-lg font-bold mb-3 text-purple-800 flex items-center justify-between" style={{ fontFamily: FONT_FAMILY }}>
+                        <div className="flex items-center"><Calculator className="w-5 h-5 mr-2" /> 2. Nhập Hệ Số & Tham Số</div>
+                        <div className="relative inline-block w-11 h-6">
+                            <input type="checkbox" id="toggleM" checked={enableM} onChange={(e) => setEnableM(e.target.checked)} className="toggle-checkbox toggle-purple"/>
+                            <label htmlFor="toggleM" className="toggle-label"></label>
+                        </div>
+                     </label>
+                     
+                     <div className="mb-3 text-center bg-gray-50 py-3 rounded border border-gray-200 h-[60px] flex items-center justify-center">
+                         <MathFormula type={funcType} {...coeffs} fontSize={16} />
+                     </div>
+                     
+                     {enableM && (
+                         <div className="mb-4 bg-purple-50 p-3 rounded-lg border border-purple-200 animate-in fade-in slide-in-from-top-2">
+                             <div className="flex justify-between items-center mb-1">
+                                 <span className="font-bold text-purple-900">Cho tham số <i>m</i> = </span>
+                                 <span className="bg-white px-2 py-0.5 rounded border border-purple-300 font-bold text-purple-700">{formatNum(mValue)}</span>
+                             </div>
+                             <input type="range" min="-10" max="10" step="0.1" value={mValue} onChange={(e) => setMValue(parseFloat(e.target.value))} className="w-full slider-m"/>
+                             <p className="text-xs text-purple-600 mt-2 italic text-center">Gợi ý: Gõ m, -2m, m+1... vào ô hệ số bên dưới</p>
+                         </div>
+                     )}
+
+                      <div className="grid grid-cols-2 gap-3 text-base mt-auto">
+                        <div className="flex items-center"><span className="w-6 font-bold text-blue-900 text-lg">a:</span><input type="text" name="a" value={coeffInputs.a} onChange={handleInputChange} className="w-16 border border-gray-300 rounded p-1 text-center font-bold text-blue-900 ml-1 text-lg flex-1 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all"/></div>
+                        <div className="flex items-center"><span className="w-6 font-bold text-blue-900 text-lg">b:</span><input type="text" name="b" value={coeffInputs.b} onChange={handleInputChange} className="w-16 border border-gray-300 rounded p-1 text-center font-bold text-blue-900 ml-1 text-lg flex-1 focus:border-purple-500 outline-none transition-all"/></div>
+                        <div className="flex items-center"><span className="w-6 font-bold text-blue-900 text-lg">c:</span><input type="text" name="c" value={coeffInputs.c} onChange={handleInputChange} className="w-16 border border-gray-300 rounded p-1 text-center font-bold text-blue-900 ml-1 text-lg flex-1 focus:border-purple-500 outline-none transition-all"/></div>
+                        {(['cubic', 'rational11', 'rational21', 'trig', 'trig_cos', 'trig_tan', 'trig_cot', 'logarithmic', 'exponential'].includes(funcType)) && <div className="flex items-center"><span className="w-6 font-bold text-blue-900 text-lg">d:</span><input type="text" name="d" value={coeffInputs.d} onChange={handleInputChange} className="w-16 border border-gray-300 rounded p-1 text-center font-bold text-blue-900 ml-1 text-lg flex-1 focus:border-purple-500 outline-none transition-all"/></div>}
+                        {(['rational21'].includes(funcType)) && <div className="flex items-center"><span className="w-6 font-bold text-blue-900 text-lg">e:</span><input type="text" name="e" value={coeffInputs.e} onChange={handleInputChange} className="w-16 border border-gray-300 rounded p-1 text-center font-bold text-blue-900 ml-1 text-lg flex-1 focus:border-purple-500 outline-none transition-all"/></div>}
                       </div>
                    </div>
-                    <div className="col-span-1"><SocraticTutor funcType={funcType} coeffs={coeffs} analysis={analysis} onToggleResults={() => setShowAnalysis(!showAnalysis)} /></div>
+
+                    {/* --- ĐỒ THỊ TRỊ TUYỆT ĐỐI --- */}
+                    <div className="bg-white p-4 rounded-xl shadow border-2 border-indigo-200 col-span-2">
+                        <label className="block text-lg font-bold mb-3 text-indigo-800 flex items-center" style={{ fontFamily: FONT_FAMILY }}><SlidersHorizontal className="w-5 h-5 mr-2" /> 8. Biến đổi Đồ thị (Trị tuyệt đối)</label>
+                        <div className="flex gap-4">
+                            <button 
+                                onClick={() => setAbsMode('none')}
+                                className={`flex-1 py-3 px-4 rounded-lg font-bold border-2 transition-all flex flex-col items-center justify-center ${absMode === 'none' ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm' : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'}`}>
+                                <span className="text-xl mb-1 font-serif italic">y = f(x)</span>
+                                <span className="text-xs font-normal">Đồ thị gốc</span>
+                            </button>
+                            <button 
+                                onClick={() => setAbsMode('abs_fx')}
+                                className={`flex-1 py-3 px-4 rounded-lg font-bold border-2 transition-all flex flex-col items-center justify-center ${absMode === 'abs_fx' ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm' : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'}`}>
+                                <span className="text-xl mb-1 font-serif italic">y = |f(x)|</span>
+                                <span className="text-xs font-normal">Lật phần dưới Ox lên trên</span>
+                            </button>
+                            <button 
+                                onClick={() => setAbsMode('f_abs_x')}
+                                className={`flex-1 py-3 px-4 rounded-lg font-bold border-2 transition-all flex flex-col items-center justify-center ${absMode === 'f_abs_x' ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm' : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'}`}>
+                                <span className="text-xl mb-1 font-serif italic">y = f(|x|)</span>
+                                <span className="text-xs font-normal">Lấy đối xứng qua Oy</span>
+                            </button>
+                        </div>
+                        {absMode !== 'none' && (
+                            <div className="mt-3 text-center text-sm font-bold text-indigo-600 bg-indigo-50 py-2 rounded border border-indigo-100 animate-in fade-in">
+                                <span className="dashed-line-explain"></span> Đồ thị gốc <i>f(x)</i> &nbsp;&nbsp;&nbsp;&nbsp; 
+                                <span className="solid-line-explain"></span> Đồ thị biến đổi
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="col-span-1"><SocraticTutor funcType={funcType} coeffs={coeffs} analysis={analysis} absMode={absMode} /></div>
                     
-                    {/* --- MỤC 7 MỚI: TƯƠNG GIAO ĐỒ THỊ --- */}
+                    {/* --- MỤC 7: TƯƠNG GIAO ĐỒ THỊ --- */}
                     <div className="bg-white p-4 rounded-xl shadow border-2 border-orange-200 col-span-1">
                      <label className="block text-lg font-bold mb-3 text-orange-700 flex items-center justify-between" style={{ fontFamily: FONT_FAMILY }}>
                         <div className="flex items-center"><Split className="w-5 h-5 mr-2" /> 7. Bài toán Tương giao</div>
-                        <div className="relative inline-block w-12 h-6">
-                            <input type="checkbox" id="toggleIntersection" checked={intersection.active} onChange={(e) => setIntersection({...intersection, active: e.target.checked})} className="toggle-checkbox"/>
+                        <div className="relative inline-block w-11 h-6">
+                            <input type="checkbox" id="toggleIntersection" checked={intersection.active} onChange={(e) => setIntersection({...intersection, active: e.target.checked})} className="toggle-checkbox toggle-orange"/>
                             <label htmlFor="toggleIntersection" className="toggle-label"></label>
                         </div>
                      </label>
                      {intersection.active ? (
                          <div className="animate-in fade-in">
-                             {/* Lựa chọn loại đường thẳng */}
                              <div className="flex mb-3 space-x-2">
-                                <button 
-                                  onClick={() => setIntersection({...intersection, type: 'horizontal'})}
-                                  className={`flex-1 py-1.5 text-sm font-bold rounded border ${intersection.type === 'horizontal' ? 'bg-blue-100 border-blue-500 text-blue-700' : 'bg-gray-100 border-gray-300 text-gray-600'}`}
-                                >
-                                  y = m
-                                </button>
-                                <button 
-                                  onClick={() => setIntersection({...intersection, type: 'linear'})}
-                                  className={`flex-1 py-1.5 text-sm font-bold rounded border ${intersection.type === 'linear' ? 'bg-blue-100 border-blue-500 text-blue-700' : 'bg-gray-100 border-gray-300 text-gray-600'}`}
-                                >
-                                  y = ax + b
-                                </button>
+                                <button onClick={() => setIntersection({...intersection, type: 'horizontal'})} className={`flex-1 py-1.5 text-sm font-bold rounded border ${intersection.type === 'horizontal' ? 'bg-orange-100 border-orange-500 text-orange-700' : 'bg-gray-100 border-gray-300 text-gray-600'}`}>y = m</button>
+                                <button onClick={() => setIntersection({...intersection, type: 'linear'})} className={`flex-1 py-1.5 text-sm font-bold rounded border ${intersection.type === 'linear' ? 'bg-orange-100 border-orange-500 text-orange-700' : 'bg-gray-100 border-gray-300 text-gray-600'}`}>y = ax + b</button>
                              </div>
                              
-                             {/* Form nhập hệ số */}
                              {intersection.type === 'horizontal' ? (
                                <div>
-                                 <div className="flex items-center mb-2">
-                                   <span className="font-bold mr-2 text-blue-900">Đường thẳng y = m:</span>
-                                   <input 
-                                     type="number" 
-                                     value={intersection.m} 
-                                     onChange={(e) => setIntersection({...intersection, m: e.target.value})} 
-                                     className="border border-orange-300 rounded px-2 py-1 w-20 text-center font-bold text-orange-600"
-                                     step="0.1"
-                                   />
+                                 <div className="flex items-center justify-between mb-2">
+                                   <span className="font-bold text-blue-900">Đường thẳng <i>y</i> = </span>
+                                   <input type="number" value={intersection.m} onChange={(e) => setIntersection({...intersection, m: e.target.value})} className="border border-orange-300 rounded px-2 py-1 w-20 text-center font-bold text-orange-600" step="0.1"/>
                                  </div>
-                                 <input 
-                                   type="range" 
-                                   min="-10" 
-                                   max="10" 
-                                   step="0.1" 
-                                   value={intersection.m} 
-                                   onChange={(e) => setIntersection({...intersection, m: e.target.value})} 
-                                   className="w-full h-2 bg-orange-200 rounded-lg appearance-none cursor-pointer accent-orange-600"
-                                 />
-                                 <div className="text-xs text-gray-500 mt-1 italic text-center">Kéo thanh trượt để thay đổi giá trị m</div>
+                                 <input type="range" min="-10" max="10" step="0.1" value={intersection.m} onChange={(e) => setIntersection({...intersection, m: e.target.value})} className="w-full slider-intersect-m"/>
                                </div>
                              ) : (
                                <div className="space-y-3">
                                  <div className="grid grid-cols-2 gap-3">
                                    <div>
                                      <label className="block text-xs font-bold text-blue-900 mb-1">Hệ số a:</label>
-                                     <input 
-                                       type="number" 
-                                       value={intersection.a} 
-                                       onChange={(e) => setIntersection({...intersection, a: parseFloat(e.target.value) || 0})} 
-                                       className="w-full border border-orange-300 rounded px-2 py-1 text-center font-bold text-orange-600"
-                                       step="0.1"
-                                     />
+                                     <input type="number" value={intersection.a} onChange={(e) => setIntersection({...intersection, a: parseFloat(e.target.value) || 0})} className="w-full border border-orange-300 rounded px-2 py-1 text-center font-bold text-blue-600" step="0.1"/>
                                    </div>
                                    <div>
                                      <label className="block text-xs font-bold text-blue-900 mb-1">Hệ số b:</label>
-                                     <input 
-                                       type="number" 
-                                       value={intersection.b} 
-                                       onChange={(e) => setIntersection({...intersection, b: parseFloat(e.target.value) || 0})} 
-                                       className="w-full border border-orange-300 rounded px-2 py-1 text-center font-bold text-orange-600"
-                                       step="0.1"
-                                     />
+                                     <input type="number" value={intersection.b} onChange={(e) => setIntersection({...intersection, b: parseFloat(e.target.value) || 0})} className="w-full border border-orange-300 rounded px-2 py-1 text-center font-bold text-green-600" step="0.1"/>
                                    </div>
                                  </div>
-                                 
                                  <div>
                                    <div className="text-xs font-bold text-blue-900 mb-1">Hệ số a:</div>
-                                   <input 
-                                     type="range" 
-                                     min="-5" 
-                                     max="5" 
-                                     step="0.1" 
-                                     value={intersection.a} 
-                                     onChange={(e) => setIntersection({...intersection, a: parseFloat(e.target.value)})} 
-                                     className="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600 mb-2"
-                                   />
+                                   <input type="range" min="-5" max="5" step="0.1" value={intersection.a} onChange={(e) => setIntersection({...intersection, a: parseFloat(e.target.value)})} className="w-full slider-intersect-a mb-2"/>
                                    <div className="text-xs font-bold text-blue-900 mb-1">Hệ số b:</div>
-                                   <input 
-                                     type="range" 
-                                     min="-10" 
-                                     max="10" 
-                                     step="0.1" 
-                                     value={intersection.b} 
-                                     onChange={(e) => setIntersection({...intersection, b: parseFloat(e.target.value)})} 
-                                     className="w-full h-2 bg-green-200 rounded-lg appearance-none cursor-pointer accent-green-600"
-                                   />
-                                 </div>
-                                 
-                                 <div className="text-center p-2 bg-gray-50 rounded border">
-                                   <span className="font-bold text-blue-900">Phương trình: </span>
-                                   <span className="text-orange-600 font-bold">
-                                     y = {formatNum(intersection.a)}x {intersection.b >= 0 ? '+' : '−'} {formatNum(Math.abs(intersection.b))}
-                                   </span>
+                                   <input type="range" min="-10" max="10" step="0.1" value={intersection.b} onChange={(e) => setIntersection({...intersection, b: parseFloat(e.target.value)})} className="w-full slider-intersect-b"/>
                                  </div>
                                </div>
                              )}
@@ -1002,18 +999,49 @@
                      )}
                     </div>
 
+                    {/* --- MỚI: TÍNH NĂNG TIẾP TUYẾN --- */}
+                    <div className="bg-white p-4 rounded-xl shadow border-2 border-emerald-200 col-span-1">
+                     <label className="block text-lg font-bold mb-3 text-emerald-800 flex items-center justify-between" style={{ fontFamily: FONT_FAMILY }}>
+                        <div className="flex items-center"><TrendingUp className="w-5 h-5 mr-2" /> 9. Tiếp Tuyến Đồ Thị</div>
+                        <div className="relative inline-block w-11 h-6">
+                            <input type="checkbox" id="toggleTangent" checked={tangent.active} onChange={(e) => setTangent({...tangent, active: e.target.checked})} className="toggle-checkbox toggle-emerald"/>
+                            <label htmlFor="toggleTangent" className="toggle-label"></label>
+                        </div>
+                     </label>
+                     {tangent.active ? (
+                         <div className="animate-in fade-in space-y-4">
+                             {absMode !== 'none' && <div className="text-xs text-red-600 italic mb-2">Lưu ý: Tiếp tuyến hiện chỉ hỗ trợ cho đồ thị gốc (Chưa qua biến đổi trị tuyệt đối).</div>}
+                             <div>
+                                 <div className="flex items-center justify-between mb-2">
+                                     <span className="font-bold text-emerald-900">Điểm tiếp xúc <i>x</i><sub>0</sub> = </span>
+                                     <input type="number" value={tangent.x0} onChange={(e) => setTangent({...tangent, x0: parseFloat(e.target.value) || 0})} className="border border-emerald-300 rounded px-2 py-1 w-20 text-center font-bold text-emerald-700" step="0.1"/>
+                                 </div>
+                                 <input type="range" min="-5" max="5" step="0.1" value={tangent.x0} onChange={(e) => setTangent({...tangent, x0: parseFloat(e.target.value)})} className="w-full slider-tangent"/>
+                             </div>
+                             
+                             <div className="bg-emerald-50 p-3 rounded border border-emerald-200">
+                                 <div className="text-sm font-bold text-emerald-800 mb-1">Phương trình tiếp tuyến:</div>
+                                 <div className="text-emerald-900 italic text-center">
+                                     {(() => {
+                                         const y0 = getFunctionValue(tangent.x0, funcType, coeffs);
+                                         const yPrime = getDerivativeValue(tangent.x0, funcType, coeffs);
+                                         if (!isFinite(y0) || !isFinite(yPrime)) return "Không xác định tại điểm này";
+                                         const b = y0 - yPrime * tangent.x0;
+                                         return <b>y = {formatNum(yPrime)}x {b >= 0 ? '+' : '−'} {formatNum(Math.abs(b))}</b>;
+                                     })()}
+                                 </div>
+                             </div>
+                         </div>
+                     ) : (
+                         <div className="text-sm text-gray-400 italic text-center py-4">Bật công tắc để kích hoạt tính năng tiếp tuyến</div>
+                     )}
+                    </div>
+
                     <div className="bg-white p-4 rounded-xl shadow border border-gray-300 col-span-1 flex flex-col relative transition-all duration-300">
                      <label className="block text-lg font-bold mb-3 text-blue-900 flex items-center justify-between" style={{ fontFamily: FONT_FAMILY }}><div className="flex items-center"><Info className="w-5 h-5 mr-2" /> 4. Kết quả khảo sát</div><button onClick={() => setShowAnalysis(!showAnalysis)} className="text-gray-500 hover:text-blue-900">{showAnalysis ? <EyeOff className="w-5 h-5"/> : <Eye className="w-5 h-5"/>}</button></label>
-                     {showAnalysis ? (<div className="flex-1 overflow-y-auto border border-gray-200 rounded bg-[#F5F5F5] p-3 max-h-[300px] animate-in fade-in slide-in-from-top-2"><AnalysisResults analysis={analysis} funcType={funcType} coeffs={coeffs} /></div>) : (<div className="flex-1 flex flex-col items-center justify-center border border-dashed border-gray-300 rounded bg-gray-50 p-6 text-center"><p className="text-gray-500 italic mb-2">Kết quả đang được ẩn để em tự luyện tập với Socrates.</p><button onClick={() => setShowAnalysis(true)} className="px-3 py-1 bg-white border border-gray-300 rounded text-sm text-blue-900 hover:bg-blue-50 font-bold shadow-sm">Hiện kết quả</button></div>)}
+                     {showAnalysis ? (<div className="flex-1 overflow-y-auto border border-gray-200 rounded bg-[#F5F5F5] p-3 max-h-[300px] animate-in fade-in slide-in-from-top-2"><AnalysisResults analysis={analysis} funcType={funcType} coeffs={coeffs} absMode={absMode}/></div>) : (<div className="flex-1 flex flex-col items-center justify-center border border-dashed border-gray-300 rounded bg-gray-50 p-6 text-center"><p className="text-gray-500 italic mb-2">Kết quả đang được ẩn để em tự luyện tập với Socrates.</p><button onClick={() => setShowAnalysis(true)} className="px-3 py-1 bg-white border border-gray-300 rounded text-sm text-blue-900 hover:bg-blue-50 font-bold shadow-sm">Hiện kết quả</button></div>)}
                     </div>
-                    <div className="bg-white p-3 rounded-xl shadow border border-gray-300 col-span-1">
-                      <label className="block text-base font-bold mb-2 text-blue-900 flex items-center" style={{ fontFamily: FONT_FAMILY }}><Palette className="w-5 h-5 mr-2" /> 5. Tùy Chỉnh</label>
-                       <div className="space-y-1 text-sm">
-                        <div className="flex justify-between items-center"><span className="font-bold text-blue-900">Cỡ chữ: {config.fontSize}</span><div className="flex gap-1"><button onClick={() => setConfig({...config, fontSize: Math.max(10, config.fontSize - 1)})} className="px-3 bg-gray-200 rounded font-bold hover:bg-gray-300">-</button><button onClick={() => setConfig({...config, fontSize: Math.min(24, config.fontSize + 1)})} className="px-3 bg-gray-200 rounded font-bold hover:bg-gray-300">+</button></div></div>
-                        <div className="flex justify-between items-center"><span className="font-bold text-blue-900">Zoom: {Math.round(config.zoom*100)}%</span><div className="flex gap-1"><button onClick={() => setConfig({...config, zoom: Math.max(0.5, config.zoom - 0.1)})} className="px-3 bg-gray-200 rounded font-bold hover:bg-gray-300"><ZoomOut className="w-4 h-4"/></button><button onClick={() => setConfig({...config, zoom: Math.min(3, config.zoom + 0.1)})} className="px-3 bg-gray-200 rounded font-bold hover:bg-gray-300"><ZoomIn className="w-4 h-4"/></button></div></div>
-                        <div className="pt-2 border-t mt-1"><div className="mb-1 font-bold text-blue-900">Màu chính:</div><div className="flex gap-1">{COLORS.map(c => <button key={c.hex} onClick={() => setConfig({...config, graphColor: c.hex})} className={`w-6 h-6 rounded-full hover:scale-110 transition-transform ${config.graphColor===c.hex?'ring-2 ring-blue-900 scale-110':''}`} style={{backgroundColor:c.hex}}></button>)}</div></div>
-                      </div>
-                   </div>
+
                    <div className="bg-white p-3 rounded-xl shadow border border-gray-300 col-span-1">
                       <label className="block text-base font-bold mb-2 text-blue-900 flex items-center" style={{ fontFamily: FONT_FAMILY }}><Layers className="w-5 h-5 mr-2" /> 6. Lớp Hiển Thị</label>
                       <div className="grid grid-cols-2 gap-2 text-sm">
@@ -1024,13 +1052,23 @@
                           <button onClick={() => toggleLayer('grid')} className={`flex items-center p-2 rounded border transition-colors col-span-2 ${viewConfig.grid ? 'bg-blue-100 border-blue-300 text-blue-900 font-bold' : 'bg-gray-50 border-gray-200 text-gray-500'}`}>{viewConfig.grid ? <Grid className="w-4 h-4 mr-2 text-green-600"/> : <XCircle className="w-4 h-4 mr-2"/>} Lưới & Trục</button>
                       </div>
                    </div>
+
+                   <div className="bg-white p-3 rounded-xl shadow border border-gray-300 col-span-2">
+                      <label className="block text-base font-bold mb-2 text-blue-900 flex items-center" style={{ fontFamily: FONT_FAMILY }}><Palette className="w-5 h-5 mr-2" /> 5. Tùy Chỉnh Đồ Thị</label>
+                       <div className="space-y-1 text-sm flex justify-between items-center px-2">
+                        <div className="flex items-center gap-3"><span className="font-bold text-blue-900">Cỡ chữ: {config.fontSize}</span><div className="flex gap-1"><button onClick={() => setConfig({...config, fontSize: Math.max(10, config.fontSize - 1)})} className="px-3 bg-gray-200 rounded font-bold hover:bg-gray-300">-</button><button onClick={() => setConfig({...config, fontSize: Math.min(24, config.fontSize + 1)})} className="px-3 bg-gray-200 rounded font-bold hover:bg-gray-300">+</button></div></div>
+                        <div className="flex items-center gap-3"><span className="font-bold text-blue-900">Zoom: {Math.round(config.zoom*100)}%</span><div className="flex gap-1"><button onClick={() => setConfig({...config, zoom: Math.max(0.5, config.zoom - 0.1)})} className="px-3 bg-gray-200 rounded font-bold hover:bg-gray-300"><ZoomOut className="w-4 h-4"/></button><button onClick={() => setConfig({...config, zoom: Math.min(3, config.zoom + 0.1)})} className="px-3 bg-gray-200 rounded font-bold hover:bg-gray-300"><ZoomIn className="w-4 h-4"/></button></div></div>
+                        <div className="flex items-center gap-3"><div className="font-bold text-blue-900">Màu chính:</div><div className="flex gap-1">{COLORS.map(c => <button key={c.hex} onClick={() => setConfig({...config, graphColor: c.hex})} className={`w-6 h-6 rounded-full hover:scale-110 transition-transform ${config.graphColor===c.hex?'ring-2 ring-blue-900 scale-110':''}`} style={{backgroundColor:c.hex}}></button>)}</div></div>
+                      </div>
+                   </div>
+
                   </div>
                   
                   <div className="mt-5 p-4 bg-white rounded-xl shadow border border-gray-300">
-                    <label className="block text-base font-bold mb-3 text-purple-700 flex items-center justify-between" style={{ fontFamily: FONT_FAMILY }}>
+                    <label className="block text-base font-bold mb-3 text-blue-700 flex items-center justify-between" style={{ fontFamily: FONT_FAMILY }}>
                         <div className="flex items-center"><EyeOpenClose className="w-5 h-5 mr-2" /> Ẩn/Hiện Kết quả bên phải</div>
-                        <div className="relative inline-block w-12 h-6">
-                            <input type="checkbox" id="toggleResultsPanel" checked={showResultsPanel} onChange={(e) => setShowResultsPanel(e.target.checked)} className="toggle-checkbox"/>
+                        <div className="relative inline-block w-11 h-6">
+                            <input type="checkbox" id="toggleResultsPanel" checked={showResultsPanel} onChange={(e) => setShowResultsPanel(e.target.checked)} className="toggle-checkbox toggle-blue"/>
                             <label htmlFor="toggleResultsPanel" className="toggle-label"></label>
                         </div>
                     </label>
@@ -1049,7 +1087,9 @@
                       </div>
                   </div>
                   
-                  {errorMsg && <div className="mt-5 bg-red-50 p-3 rounded text-base text-red-800 border border-red-200 flex items-center"><AlertTriangle className="w-5 h-5 mr-3"/>{errorMsg}</div>}
+                  <div className="mt-4 text-center text-sm text-gray-500 py-3 border-t border-gray-200">
+                      Bản quyền © <strong>Edulab Ai 2026</strong> - Số điện thoại: <strong>0989550411</strong>
+                  </div>
                 </div>
               </div>
               
@@ -1060,7 +1100,7 @@
                   {/* 1. BẢNG XÉT DẤU */}
                   <div className={`w-full bg-white rounded-xl shadow-md border-2 border-gray-300 mb-4 overflow-hidden flex-shrink-0 ${isGraphFullscreen ? 'hidden' : ''}`}>
                     <div className="bg-blue-900 text-amber-400 px-4 py-2 font-bold text-lg flex items-center" style={{ fontFamily: FONT_FAMILY }}><span>1. Bảng xét dấu</span></div>
-                    <div className="p-2 flex justify-center bg-white overflow-x-auto"><BBT analysis={analysis} funcType={funcType} coeffs={coeffs} config={config} /></div>
+                    <div className="p-2 flex justify-center bg-white overflow-x-auto"><BBT analysis={analysis} funcType={funcType} coeffs={coeffs} config={config} absMode={absMode} /></div>
                   </div>
 
                   {/* 2. ĐỒ THỊ (CÓ FULLSCREEN) */}
