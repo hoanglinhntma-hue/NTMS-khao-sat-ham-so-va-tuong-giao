@@ -391,7 +391,7 @@
           const [config, setConfig] = useState({ fontSize: 16, strokeWidth: 2, graphColor: DEFAULT_BLUE, zoom: 1.0, bbtLineWidth: 2 });
           
           const [isGraphFullscreen, setIsGraphFullscreen] = useState(false);
-          const [intersection, setIntersection] = useState({ active: false, type: 'horizontal', m: 0, a: 1, b: 0 });
+          const [intersection, setIntersection] = useState({ active: false, type: 'horizontal', m: 0, a: 1, b: 0, showArea: false });
           
           // --- MỚI: Tiếp tuyến ---
           const [tangent, setTangent] = useState({ active: false, x0: 1 });
@@ -718,6 +718,72 @@
               ctx.fillStyle = '#dc2626';
               ctx.font = `bold ${config.fontSize + 2}pt ${MATH_FONT_FAMILY}`;
               ctx.fillText(`Số giao điểm: ${points.length}`, 20, 60);
+
+              // --- MỚI: TÔ MÀU DIỆN TÍCH HÌNH PHẲNG (TÍCH PHÂN) ---
+              if (intersection.showArea && points.length >= 2) {
+                  points.sort((p1, p2) => p1.x - p2.x); // Sắp xếp các giao điểm từ trái qua phải
+                  let totalArea = 0;
+                  ctx.fillStyle = "rgba(245, 158, 11, 0.35)"; // Màu cam nhạt trong suốt
+                  
+                  for (let i = 0; i < points.length - 1; i++) {
+                      const x1 = points[i].x;
+                      const x2 = points[i+1].x;
+                      
+                      // Kiểm tra xem có tiệm cận đứng nằm giữa x1, x2 không. Nếu có thì bỏ qua đoạn này.
+                      let hasPole = false;
+                      if (analysis.poles) {
+                           hasPole = analysis.poles.some(p => p > x1 && p < x2);
+                           if (absMode === 'f_abs_x') {
+                                hasPole = hasPole || analysis.poles.some(p => p > 0 && -p > x1 && -p < x2);
+                           }
+                      }
+                      
+                      if (!hasPole) {
+                          // 1. Vẽ vùng diện tích để đổ màu
+                          ctx.beginPath();
+                          let localStep = (x2 - x1) / 100;
+                          
+                          // Chạy theo đồ thị f(x) từ x1 đến x2
+                          for (let x = x1; x <= x2 + localStep/2; x += localStep) {
+                              let boundedX = Math.min(x, x2);
+                              let evalX = absMode === 'f_abs_x' ? Math.abs(boundedX) : boundedX;
+                              let val = getFunctionValue(evalX, funcType, coeffs);
+                              if (absMode === 'abs_fx') val = Math.abs(val);
+                              
+                              if (x === x1) ctx.moveTo(toSX(boundedX), toSY(val));
+                              else ctx.lineTo(toSX(boundedX), toSY(val));
+                          }
+                          
+                          // Chạy ngược lại theo đường thẳng g(x) từ x2 về x1
+                          for (let x = x2; x >= x1 - localStep/2; x -= localStep) {
+                              let boundedX = Math.max(x, x1);
+                              let lineVal = intersection.type === 'horizontal' ? parseFloat(intersection.m) : intersection.a * boundedX + intersection.b;
+                              ctx.lineTo(toSX(boundedX), toSY(lineVal));
+                          }
+                          ctx.closePath();
+                          ctx.fill();
+                          
+                          // 2. Tính diện tích (Tích phân số học gần đúng)
+                          const intStep = (x2 - x1) / 500;
+                          let subArea = 0;
+                          for(let x = x1; x < x2; x += intStep) {
+                              const mid = x + intStep / 2;
+                              let evalX = absMode === 'f_abs_x' ? Math.abs(mid) : mid;
+                              let fx = getFunctionValue(evalX, funcType, coeffs);
+                              let actualFx = absMode === 'abs_fx' ? Math.abs(fx) : fx;
+                              let gx = intersection.type === 'horizontal' ? parseFloat(intersection.m) : intersection.a * mid + intersection.b;
+                              subArea += Math.abs(actualFx - gx) * intStep;
+                          }
+                          totalArea += subArea;
+                      }
+                  }
+                  
+                  if (totalArea > 0) {
+                      ctx.fillStyle = '#b45309';
+                      ctx.font = `bold ${config.fontSize + 2}pt ${MATH_FONT_FAMILY}`;
+                      ctx.fillText(`Diện tích S ≈ ${formatNum(totalArea)}`, 20, 85);
+                  }
+              }
             }
 
             // --- Các điểm đặc biệt & Tiệm cận (Chỉ hiển thị chuẩn khi KHÔNG ở chế độ Trị tuyệt đối) ---
@@ -992,6 +1058,21 @@
                                    <input type="range" min="-10" max="10" step="0.1" value={intersection.b} onChange={(e) => setIntersection({...intersection, b: parseFloat(e.target.value)})} className="w-full slider-intersect-b"/>
                                  </div>
                                </div>
+                             )}
+                             
+                             <div className="mt-4 pt-3 border-t border-orange-100 flex items-center justify-between">
+                                <div className="flex items-center text-orange-800 font-bold text-sm">
+                                    <Layers className="w-4 h-4 mr-1"/> Tô màu diện tích <i>S</i> (Tích phân)
+                                </div>
+                                <div className="relative inline-block w-11 h-6">
+                                    <input type="checkbox" id="toggleArea" checked={intersection.showArea} onChange={(e) => setIntersection({...intersection, showArea: e.target.checked})} className="toggle-checkbox toggle-orange"/>
+                                    <label htmlFor="toggleArea" className="toggle-label"></label>
+                                </div>
+                             </div>
+                             {intersection.showArea && (
+                                <div className="mt-2 text-xs text-orange-600 italic leading-tight">
+                                    * Ứng dụng tự động dò tìm giao điểm, tô màu và tính gần đúng diện tích hình phẳng giới hạn. (Bỏ qua đoạn có chứa đường tiệm cận đứng).
+                                </div>
                              )}
                          </div>
                      ) : (
